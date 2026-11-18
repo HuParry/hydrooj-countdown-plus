@@ -1,0 +1,121 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<style>
+  .countdown-intro { margin-bottom: 1.4rem; }
+  .countdown-intro h1 { margin: 0 0 .45rem; font-size: 1.8rem; }
+  .countdown-intro p { margin: 0; color: #6b7280; }
+  .countdown-options { display: grid; grid-template-columns: minmax(0, 1fr) 160px; gap: 1rem; }
+  .countdown-editor, .countdown-prompt { display: block; width: 100%; box-sizing: border-box; padding: .9rem 1rem; border: 1px solid #d5dce5; border-radius: 6px; font: 13px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace; color: #263348; background: #fafbfd; tab-size: 2; resize: vertical; }
+  .countdown-editor { min-height: 330px; white-space: pre; overflow: auto; }
+  .countdown-prompt { min-height: 240px; }
+  .countdown-editor:focus, .countdown-prompt:focus { outline: 2px solid #5a91d6; outline-offset: 1px; }
+  .countdown-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1.2rem; }
+  .countdown-actions .button { margin: 0; }
+  .countdown-message { padding: .9rem 1.1rem; margin-bottom: 1rem; border-radius: 5px; }
+  .countdown-error { color: #a02e2e; background: #fff0f0; }
+  .countdown-source { display: block; padding: .9rem 0; border-bottom: 1px solid #e5e7eb; }
+  .countdown-source strong { display: block; margin-bottom: .3rem; }
+  .countdown-source span { color: #6b7280; font-size: .9rem; line-height: 1.6; }
+  .countdown-help { color: #6b7280; font-size: .9rem; line-height: 1.8; }
+  .countdown-example { margin: 1rem 0; }
+  .countdown-example summary { cursor: pointer; color: #496b92; }
+  .countdown-example pre { padding: .8rem 1rem; margin: .7rem 0; background: #f5f7fa; border-radius: 6px; white-space: pre-wrap; font: 13px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace; }
+  @media (max-width: 640px) { .countdown-options { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+</style>
+<div class="row"><div class="columns countdown-intro">
+  <h1>倒计时管理</h1>
+</div></div>
+<div class="row">
+  <div class="medium-9 columns">
+    {% if error %}<div class="countdown-message countdown-error" role="alert">{{ error }} 原有设置未改动，请修改下方文本后重新保存。</div>{% endif %}
+    <div class="section">
+      <div class="section__header"><h2 class="section__title">首页倒计时</h2></div>
+      <div class="section__body">
+        <form method="post" action="{{ url('countdown') }}" id="countdown-form">
+          <div class="countdown-options">
+            <label>倒计时标题<input class="textbox" name="title" value="{{ config.title }}" maxlength="100" required></label>
+            <label>最多显示条数<input class="textbox" type="number" name="max_dates" value="{{ config.max_dates }}" min="1" max="100" step="1" required></label>
+          </div>
+          <label for="countdown-yaml">倒计时编辑</label>
+          <p class="countdown-help" id="countdown-yaml-help">名称和日期完全相同的条目会自动去重。</p>
+          <textarea id="countdown-yaml" class="countdown-editor" name="dates" rows="16" wrap="off" spellcheck="false" aria-describedby="countdown-yaml-help" placeholder='- name: "示例赛事"&#10;  date: "2027-01-01"'>{{ datesText }}</textarea>
+          <details class="countdown-example">
+            <summary>查看格式示例</summary>
+            <pre>- name: "示例赛事 A"
+  date: "2027-01-01"
+- name: "示例赛事 B"
+  date: "2027-02-01"
+  source: "https://example.com/official-notice"</pre>
+            <p class="countdown-help">日期优先填写正式比赛日。官方只公布赛期范围时，可使用开始日期，并在名称后注明“（赛期开始）”；暂定日程也可收录。<code>source</code> 是可选的官方来源链接，会随条目保留。可以直接粘贴 AI 返回的完整 YAML 代码块。示例仅展示格式，不是真实赛程。</p>
+          </details>
+          <p class="countdown-help">首页按日期从近到远展示。过期条目只从首页隐藏，仍保留在编辑框中。</p>
+          <div class="countdown-actions">
+            <button class="rounded primary button" type="submit">保存设置</button>
+            <a href="{{ url('homepage') }}">返回首页</a>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header"><h2 class="section__title">让 AI 帮你整理赛程</h2></div>
+      <div class="section__body">
+        <p class="countdown-help">复制下方提示词，发送给支持联网查询的 AI；可以自行调整查询范围。将 AI 输出的 YAML 追加到上方编辑框末尾，核对来源和日期后保存。</p>
+        <label for="countdown-ai-prompt">查询提示词</label>
+        <textarea id="countdown-ai-prompt" class="countdown-prompt" rows="12" readonly>{{ importPrompt }}</textarea>
+        <div class="countdown-actions">
+          <button class="rounded button" type="button" id="countdown-copy-prompt">复制提示词</button>
+          <span id="countdown-copy-status" class="countdown-help" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="medium-3 columns">
+    <div class="section">
+      <div class="section__header"><h2 class="section__title">查询赛站时间</h2></div>
+      <div class="section__body">
+        <a class="countdown-source" href="https://icpc.pku.edu.cn/ssxx/index.htm" target="_blank" rel="noopener noreferrer">
+          <strong>ICPC 赛站与日程 ↗</strong><span>ICPC 北京总部：查看亚洲 EC 区域赛汇总及各赛站信息。</span>
+        </a>
+        <a class="countdown-source" href="https://ccpc.io/event" target="_blank" rel="noopener noreferrer">
+          <strong>CCPC 赛事安排 ↗</strong><span>CCPC 官网：查看各场比赛安排及赛站通知。</span>
+        </a>
+        <p class="countdown-help">请区分报到、热身赛与正式赛日期，以各赛站最新通知为准。AI 查到的信息也请核对后再保存。</p>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header"><h2 class="section__title">使用提示</h2></div>
+      <div class="section__body countdown-help">
+        <p>系统管理员和主站拥有“编辑域设置”权限的管理员可以编辑，配置对全站首页生效。</p>
+        <p>修改文本后请点击“保存设置”。格式有误时会提示具体问题，整段输入会保留。</p>
+        <p>首次保存会自动在首页显示倒计时，无需再修改主页配置。</p>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+(() => {
+  const prompt = document.getElementById('countdown-ai-prompt');
+  const status = document.getElementById('countdown-copy-status');
+  document.getElementById('countdown-copy-prompt').addEventListener('click', async () => {
+    let copied = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(prompt.value); copied = true; } catch {}
+    }
+    if (!copied) {
+      prompt.focus();
+      prompt.select();
+      try { copied = document.execCommand('copy'); } catch {}
+    }
+    status.textContent = copied ? '提示词已复制。' : '已选中提示词，请按 Ctrl+C（Mac 使用 Command+C）复制。';
+  });
+  document.getElementById('countdown-form').addEventListener('submit', (event) => {
+    if (event.defaultPrevented) return;
+    const button = event.currentTarget.querySelector('[type="submit"]');
+    button.disabled = true;
+    button.textContent = '正在保存…';
+  });
+})();
+</script>
+{% endblock %}

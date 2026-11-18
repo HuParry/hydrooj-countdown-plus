@@ -1,0 +1,15 @@
+<div class="section side">
+  <div class="section__header">
+    <h1 class="section__title">{{ payload.title }}</h1>
+    {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) or (handler.domain._id == 'system' and handler.user.hasPerm(perm.PERM_EDIT_DOMAIN)) %}
+    <div class="section__tools"><a href="{{ url('countdown') }}">管理</a></div>
+    {% endif %}
+  </div>
+  <div class="section__body typo">
+    {% for date in payload.dates %}
+    <p>距 {{ date.name }} 还有 <strong>{{ date.diff }}</strong> 天</p>
+    {% else %}
+    <p class="help-text">暂无即将到来的倒计时。</p>
+    {% endfor %}
+  </div>
+</div>

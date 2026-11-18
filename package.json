@@ -1,0 +1,41 @@
+{
+  "name": "hydrooj-countdown-plus",
+  "version": "0.1.0",
+  "description": "Manage HydroOJ homepage countdowns from /countdown",
+  "main": "index.ts",
+  "files": ["index.ts", "lib/", "templates/", "prompt.txt", "README.md", "LICENSE"],
+  "keywords": [
+    "hydrooj"
+  ],
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HuParry/hydrooj-countdown-plus.git"
+  },
+  "homepage": "https://github.com/HuParry/hydrooj-countdown-plus#readme",
+  "bugs": {
+    "url": "https://github.com/HuParry/hydrooj-countdown-plus/issues"
+  },
+  "preferUnplugged": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check:publish": "node scripts/check-package.cjs"
+  },
+  "peerDependencies": {
+    "hydrooj": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "hydrooj": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
