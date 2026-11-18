@@ -30,7 +30,7 @@ export function parseDatesText(value: unknown): unknown[] {
 }
 
 export function formatDatesText(dates: CountdownDate[]) {
-    return dates.length ? dump(dates, {
+    return dates.length ? dump(dates.map(({ name, date }) => ({ name, date })), {
         schema: JSON_SCHEMA, lineWidth: -1, forceQuotes: true, noRefs: true,
     }) : '';
 }

@@ -30,12 +30,12 @@
 
 1. 修改 `package.json` 中的 `version`，每次发布使用尚未发布过的新版本。
 2. 在插件目录执行 `npm run check:publish --workspaces=false`，确认安装包包含源码、模板、`prompt.txt` 和许可文件。
-3. 提交代码，推送与版本号一致的标签。例如当前版本为 `0.1.0`：
+3. 提交代码，推送与版本号一致的标签。例如当前版本为 `0.1.1`：
 
 ```sh
-git push origin HEAD
-git tag v0.1.0
-git push origin v0.1.0
+git push github HEAD
+git tag v0.1.1
+git push github v0.1.1
 ```
 
 GitHub Actions 会检查标签、仓库和安装包内容，通过后发布到 npm。正式版本使用 `latest`，带预发布后缀的版本使用 `next`。

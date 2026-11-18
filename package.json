@@ -1,6 +1,6 @@
 {
   "name": "hydrooj-countdown-plus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Manage HydroOJ homepage countdowns from /countdown",
   "main": "index.ts",
   "files": ["index.ts", "lib/", "templates/", "prompt.txt", "README.md", "LICENSE"],

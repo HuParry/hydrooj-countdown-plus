@@ -1,7 +1,6 @@
 export interface CountdownDate {
     name: string;
     date: string;
-    source?: string;
 }
 
 export interface CountdownConfig {
@@ -26,7 +25,6 @@ export function normalizeConfig(value: any): CountdownConfig {
             name: entry?.name,
             date: entry?.date instanceof Date && Number.isFinite(entry.date.getTime())
                 ? entry.date.toISOString().slice(0, 10) : entry?.date,
-            ...(typeof entry?.source === 'string' && entry.source.trim() ? { source: entry.source.trim() } : {}),
         })).filter((entry) => typeof entry.name === 'string' && isDate(entry.date)),
     };
 }
@@ -44,24 +42,12 @@ export function validateConfig(value: any): CountdownConfig {
             throw new Error(`第 ${index + 1} 条倒计时需要填写名称，最多 100 个字符。`);
         }
         if (!isDate(entry.date)) throw new Error(`第 ${index + 1} 条倒计时的日期无效，请填写 YYYY-MM-DD 格式的有效日期。`);
-        let source: string | undefined;
-        if (entry.source !== undefined && entry.source !== '') {
-            try {
-                if (typeof entry.source !== 'string' || entry.source.length > 2000) throw new Error();
-                const url = new URL(entry.source.trim());
-                if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
-                source = entry.source.trim();
-            } catch {
-                throw new Error(`第 ${index + 1} 条倒计时的来源链接无效，请填写完整的 HTTP 或 HTTPS 地址。`);
-            }
-        }
-        return { name: entry.name.trim(), date: entry.date, ...(source ? { source } : {}) };
+        return { name: entry.name.trim(), date: entry.date };
     });
     const unique = new Map<string, CountdownDate>();
     for (const entry of dates) {
         const key = JSON.stringify([entry.name, entry.date]);
-        const previous = unique.get(key);
-        unique.set(key, { ...entry, ...(previous?.source && !entry.source ? { source: previous.source } : {}) });
+        unique.set(key, entry);
     }
     return { title: value.title.trim(), max_dates: limit, dates: [...unique.values()] };
 }
@@ -76,6 +62,6 @@ export function buildCountdown(config: CountdownConfig, now = new Date()) {
         title: config.title,
         dates: config.dates.filter((entry) => entry.date >= today)
             .slice().sort((left, right) => left.date.localeCompare(right.date)).slice(0, config.max_dates)
-            .map((entry) => ({ ...entry, diff: (Date.parse(`${entry.date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000 })),
+            .map(({ name, date }) => ({ name, date, diff: (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000 })),
     };
 }
